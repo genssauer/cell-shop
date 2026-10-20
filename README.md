@@ -2,7 +2,7 @@
 
 Serviço HTTP pequeno para catálogo, checkout idempotente e processamento assíncrono de faturamento. A solução usa Node.js 24, TypeScript strict, Fastify 5 e SQLite. A organização é por domínio/caso de uso (`catalog`, `checkout`, `orders`, `billing`) e infraestrutura compartilhada; não há uma camada genérica de repositórios nem modelagem DDD tática sem necessidade.
 
-> **Repositório público:** pendente de publicação. O projeto local está na branch `001-backend-challenge`.
+> **Repositório público:** pendente de publicação. O checkout local está na branch `main`.
 
 ## Arquitetura
 
@@ -30,7 +30,7 @@ O worker executa no mesmo processo e usa uma tabela persistida como fila/outbox 
 - **ERP e falhas controláveis são simulados:** não existe chamada a serviço real nem credencial de integração.
 - **Sem autenticação ou pagamento real:** fora do escopo do teste.
 
-A visão de evolução para 30–90 dias e a análise das alternativas estão em [`docs/challenge-answers.md`](docs/challenge-answers.md). Indicadores, PromQL, alertas e procedimentos ficam em [`docs/operations.md`](docs/operations.md). O uso de IA está descrito em [`PROMPTS.md`](PROMPTS.md).
+As respostas completas às cinco perguntas conceituais da Parte 1.A estão em [`docs/respostas-conceituais.md`](docs/respostas-conceituais.md). O registro reconstruído de prompts (não literal) e a revisão do uso de IA estão em [`PROMPTS.md`](PROMPTS.md).
 
 ## Requisitos e execução
 
@@ -47,10 +47,9 @@ A API escuta em `http://localhost:3000` e cria `var/app.sqlite` com dados locais
 
 ```sh
 npm test
-npm run openapi:export
 ```
 
-A suíte cobre cache/TTL, indisponibilidade, idempotência, rollback, concorrência pela última unidade, status público e transições do worker. O schema de rotas é a fonte da validação e do contrato; a exportação atualiza [`specs/001-backend-challenge/contracts/openapi.yaml`](specs/001-backend-challenge/contracts/openapi.yaml).
+A suíte cobre cache/TTL, indisponibilidade, idempotência, rollback, concorrência pela última unidade, status público e transições do worker. Os schemas das rotas validam requests/responses e alimentam a documentação OpenAPI disponível no Swagger UI em `/docs`.
 
 ## API local
 
@@ -100,6 +99,6 @@ OTEL_ENABLED=true npm run dev
 
 Envie um checkout e siga o trace no Jaeger do request até `billing.process_order`. Em caso de falha, procure `orderId` nos logs, consulte `/orders/{orderId}/status`, confira `billing_tasks` e `reservations` no SQLite e valide `billing_oldest_task_age_seconds`. Resultado ERP incerto não deve ser reenviado manualmente sem reconciliação; o worker consulta a mesma chave idempotente.
 
-O passo a passo detalhado está em [`specs/001-backend-challenge/quickstart.md`](specs/001-backend-challenge/quickstart.md).
+As decisões sobre cache, observabilidade, concorrência, mensageria, contrato e IA estão explicadas nas [respostas conceituais](docs/respostas-conceituais.md).
 
 O quickstart foi validado com um SQLite novo: `GET /products` retornou `200`, o checkout retornou `202`, o pedido chegou a `COMPLETED` e `/docs` retornou `200`.
